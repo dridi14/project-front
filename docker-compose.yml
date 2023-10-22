@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:latest
+    volumes:
+      - db-data:/var/lib/postgresql/data 
+    environment:
+      POSTGRES_DB: mydatabase
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+    ports:
+      - "5432:5432"
+    networks:
+      - dev
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgres://myuser:mypassword@db:5432/mydatabase
+    networks:
+      - dev
+
+  caddy:
+    image: dunglas/mercure
+    restart: unless-stopped
+    container_name: mercure_docker
+    environment:
+      - SERVER_NAME=:80
+      - MERCURE_PUBLISHER_JWT_KEY=!ChangeMe!
+      - MERCURE_SUBSCRIBER_JWT_KEY=!ChangeMe!
+      - MERCURE_EXTRA_DIRECTIVES=cors_origins http://localhost:3000, http://localhost:8245
+    ports:
+      - "9090:80"
+      - "443:443"
+    networks:
+      - dev
+
+networks:
+  dev:
+
+volumes:
+  db-data:
