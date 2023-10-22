@@ -1,0 +1,31 @@
+/* Apply styles to the message container */
+.message-container {
+    border: 1px solid #ccc;
+    padding: 10px;
+    max-height: 400px; /* Set a maximum height for the message container */
+    overflow-y: auto; /* Enable vertical scrolling when content overflows */
+  }
+  
+  /* Style the message list */
+  .message-container .list-group {
+    min-height: 400px; /* Allow the list to expand within the container */
+    border-radius: 10px;
+  }
+  
+  /* Style individual messages in the list */
+  .message-container .list-group-item {
+    background-color: #f0f0f0;
+    margin-bottom: 5px;
+    border: none;
+  }
+  
+  /* Style the message input field */
+  .form-control {
+    border-radius: 0; /* Remove input field border radius */
+  }
+  
+  /* Style the send button */
+  .btn-primary {
+    border-radius: 0; /* Remove button border radius */
+  }
+  
