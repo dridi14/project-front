@@ -7,11 +7,10 @@ from rest_framework.permissions import IsAuthenticated
 import requests
 import json
 from website import settings
-
-
+from django_mercure.publisher import publish
 
 class RoomListCreate(generics.ListCreateAPIView):
-    permission_classes = (IsAuthenticated)
+    permission_classes = IsAuthenticated
     serializer_class = RoomSerializer
 
     def get_queryset(self):
@@ -26,39 +25,25 @@ class MessageListCreate(generics.ListCreateAPIView):
     serializer_class = MessageSerializer
 
     def get_queryset(self):
-        room = self.kwargs['room']
+        room = self.kwargs["room"]
         return Message.objects.filter(Room=room)
-    
+
     def perform_create(self, serializer):
-        room = Room.objects.get(id=self.kwargs['room'])
+    room = Room.objects.get(id=self.kwargs["room"])
 
-        message_instance = serializer.save(
-            user=self.request.user, 
-            Room=room
-        )
-        
-        topic = f'room-{self.kwargs["room"]}'
-        data = {
-            'id': message_instance.id,
-            'message': message_instance.message,
-            'user': message_instance.user,
-            'room': message_instance.Room,
-            'time': message_instance.time.strftime('%Y-%m-%d %H:%M:%S'),
-        }
+    message_instance = serializer.save(user=self.request.user, Room=room)
 
-        # Broadcast the message
-        try:
-            response = requests.post(
-                settings.MERCURE_PUBLISH_URL,
-                data={
-                    'topic': topic,
-                    'data': json.dumps(data),
-                },
-            )
-            response.raise_for_status()
-        except requests.RequestException as e:
-            print(f"Error broadcasting message: {e}")
-    
+    topic = f'room-{self.kwargs["room"]}'
+    data = {
+        "id": message_instance.id,
+        "message": message_instance.message,
+        "user": message_instance.user,
+        "room": message_instance.Room,
+        "time": message_instance.time.strftime("%Y-%m-%d %H:%M:%S"),
+    }
+
+    # Broadcast the message
+    publish(topic, data)
 
 class CreateUserView(generics.CreateAPIView):
     permission_classes = ()
@@ -66,6 +51,3 @@ class CreateUserView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         return super().perform_create(serializer)
-    
-
-

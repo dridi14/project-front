@@ -1,14 +1,14 @@
 from django.db import models
 
 
-
 class Room(models.Model):
     name = models.CharField(max_length=100)
     description = models.CharField(max_length=100)
 
     def __str__(self):
         return self.name
-    
+
+
 class Message(models.Model):
     message = models.CharField(max_length=100)
     user = models.CharField(max_length=100)
@@ -17,4 +17,3 @@ class Message(models.Model):
 
     def __str__(self):
         return self.message
-    
