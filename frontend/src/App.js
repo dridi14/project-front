@@ -18,6 +18,7 @@ function App() {
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="mr-auto">
               <Nav.Link as={Link} to="/chat">Chat</Nav.Link> {/* Add a link to the Chat component */}
+              <Nav.Link as={Link} to="/userlist">User List</Nav.Link>
             </Nav>
           </Navbar.Collapse>
         </Navbar>
@@ -26,6 +27,8 @@ function App() {
           <Route path="/" element={<NeedAuth><UserList /></NeedAuth>} />
           <Route path="/login" element={<Login />} />
           <Route path="/chat" element={<Chat />} /> {/* Route for the Chat component */}
+          <Route path="/userlist" element={<NeedAuth><UserList /></NeedAuth>} />
+          <Route path="*" element={<h1>Not Found</h1>} />
         </Routes>
       </BrowserRouter>
     </UserProvider>

@@ -13,6 +13,8 @@ import datetime
 from pathlib import Path
 import os
 from datetime import timedelta
+from decouple import config
+import dj_database_url
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -94,16 +96,9 @@ WSGI_APPLICATION = 'website.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'mydatabase',
-        'USER': 'myuser',
-        'PASSWORD': 'mypassword',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
-}
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATABASE_URL = config("DATABASE_URL")
+DATABASES = {"default": dj_database_url.config(default=DATABASE_URL)}
 
 
 MERCURE_HUB_URL = 'http://localhost:9090/.well-known/mercure'
