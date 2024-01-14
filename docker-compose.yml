@@ -10,6 +10,15 @@ services:
     volumes:
       - ./backend:/app
 
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+
   mercure:
     image: dunglas/mercure
     restart: unless-stopped
@@ -28,6 +37,8 @@ services:
       - "8001:80" 
     networks:
       - dev
+
+  
 
 networks:
   dev:
