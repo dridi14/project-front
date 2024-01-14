@@ -24,17 +24,18 @@ services:
     restart: unless-stopped
     environment:
       SERVER_NAME: ":80"
-      MERCURE_PUBLISHER_JWT_KEY: '!ChangeMe!'
-      MERCURE_SUBSCRIBER_JWT_KEY: '!ChangeMe!'
+      MERCURE_PUBLISHER_JWT_KEY: '20dcbb37a16c84572ffce125538c15094e936c1c169617882b7568027072ddb7'
+      MERCURE_SUBSCRIBER_JWT_KEY: '20dcbb37a16c84572ffce125538c15094e936c1c169617882b7568027072ddb7'
       MERCURE_EXTRA_DIRECTIVES: |
         cors_allowed_origins https://localhost:8000
+        subscribe_authorization_method jwt
     command: /usr/bin/caddy run --config /etc/caddy/Caddyfile
     volumes:
       - mercure_data:/data
       - mercure_config:/config
 
     ports:
-      - "8001:80" 
+      - "8001:80"
     networks:
       - dev
 
