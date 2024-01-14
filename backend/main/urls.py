@@ -15,4 +15,6 @@ urlpatterns = [
     path(
         "rooms/<int:room>/messages/", MessageListCreate.as_view(), name="message_list"
     ),
+    path("accounts/users/", views.UserList.as_view(), name="user_list"),
+
 ]

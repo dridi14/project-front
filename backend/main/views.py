@@ -102,4 +102,8 @@ class CustomLoginView(APIView):
             {"detail": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED
         )
 
-        
+class UserList(generics.ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    

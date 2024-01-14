@@ -1,9 +1,24 @@
+import { useContext } from 'react';
+import { userContext } from '../Context/UserContext';
+
 export default function useGetUserList() {
+    const [loggedUser] = useContext(userContext);
+
     return function () {
-        return fetch('http://localhost:8245/user-list', {
+        return fetch('http://127.0.0.1:8000/api/accounts/users/', {
             method: 'GET',
-            mode: "cors"
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${loggedUser}`
+            },
+            mode: "cors",
+            credentials: 'include',
         })
-            .then(data => data.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            });
     }
 }

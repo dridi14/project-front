@@ -1,4 +1,4 @@
-import {useEffect, useState} from "react";
+import { useEffect, useState } from "react";
 import useGetUserList from "../Hook/useGetUserList";
 import useBackendPing from "../Hook/useBackendPing";
 
@@ -24,7 +24,18 @@ export default function UserList() {
     }
 
     useEffect(() => {
-        getUserList().then(data => setUserList(data.users));
+        getUserList().then(data => {
+            console.log("API Response:", data); // Check API response
+            if (data && data.users) {
+                setUserList(data.users);
+            } else {
+                // Handle the case where data.users is undefined or not in expected format
+                console.error("Invalid format or undefined data:", data);
+            }
+        }).catch(error => {
+            // Handle any errors in API call
+            console.error("Error fetching user list:", error);
+        });
 
         const url = new URL('http://localhost:9090/.well-known/mercure');
         url.searchParams.append('topic', 'https://example.com/my-private-topic');
@@ -33,20 +44,18 @@ export default function UserList() {
         eventSource.onmessage = handleMessage;
 
         return () => {
-            eventSource.close()
+            eventSource.close();
         }
-
-    }, [])
+    }, []);
 
     return (
         <div>
             <h1 className='m-5 text-center'>Ping a user</h1>
-            {userList.map((user) => (
+            {userList && userList.map((user) => (
                 <form className='w-75 mx-auto mb-3' onSubmit={handleSubmit}>
                     <button className='btn btn-dark w-100' type='submit' value={user.id}>{user.username}</button>
                 </form>
-
             ))}
         </div>
-    )
+    );
 }

@@ -4,11 +4,20 @@ import NeedAuth from './Auth/NeedAuth';
 import UserList from './Component/UserList';
 import Login from './Auth/Login';
 import Chat from './Component/Chat'; // Import the Chat component
-import UserProvider from './Context/UserContext';
+import UserProvider, { userContext } from './Context/UserContext';
 import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
+import { useContext } from 'react'; // Import useContext
 
 function App() {
+  const [user, setUser] = useContext(userContext); // Use the userContext
+
+  // Function to handle logout
+  const handleLogout = () => {
+    setUser(''); // Clear the user token
+    // Additional logic if necessary, e.g., clearing local storage
+  };
+
   return (
     <UserProvider>
       <BrowserRouter>
@@ -17,8 +26,10 @@ function App() {
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="mr-auto">
-              <Nav.Link as={Link} to="/chat">Chat</Nav.Link> {/* Add a link to the Chat component */}
+              <Nav.Link as={Link} to="/chat">Chat</Nav.Link>
               <Nav.Link as={Link} to="/userlist">User List</Nav.Link>
+              
+                <Nav.Link as={Link} to="/login" onClick={handleLogout}>Logout</Nav.Link> 
             </Nav>
           </Navbar.Collapse>
         </Navbar>
@@ -26,7 +37,7 @@ function App() {
         <Routes>
           <Route path="/" element={<NeedAuth><UserList /></NeedAuth>} />
           <Route path="/login" element={<Login />} />
-          <Route path="/chat" element={<Chat />} /> {/* Route for the Chat component */}
+          <Route path="/chat" element={<NeedAuth><Chat /></NeedAuth>} />
           <Route path="/userlist" element={<NeedAuth><UserList /></NeedAuth>} />
           <Route path="*" element={<h1>Not Found</h1>} />
         </Routes>
