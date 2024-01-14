@@ -39,12 +39,14 @@ export default function UserList() {
     
         const mercureToken = loggedUser.mercure_token;
         const mercureHubUrl ='http://localhost:8001/.well-known/mercure';
+        const topic = '';
         const headers = {
-            Authorization: `Bearer ${mercureToken}`,
+            'Authorization': `Bearer ${mercureToken}`,
             'Content-Type': 'application/x-www-form-urlencoded',
+            'origin': 'http://localhost:3000'
         };
         
-        const eventSource = new EventSource(mercureHubUrl, { headers });
+        const eventSource = new EventSource(`${mercureHubUrl}?topic=${encodeURIComponent(topic)}`, { headers });
         
         eventSource.onmessage = handleMessage;
 
