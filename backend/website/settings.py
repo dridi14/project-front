@@ -121,6 +121,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+MERCURE_PUBLISH_URL = "http://localhost:8001/.well-known/mercure"
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
