@@ -9,7 +9,7 @@ export default function useGetUserList() {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${loggedUser}`
+                'Authorization': `Bearer ${loggedUser.access}`
             },
             mode: "cors",
             credentials: 'include',

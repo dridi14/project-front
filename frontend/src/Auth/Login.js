@@ -13,6 +13,7 @@ export default function Login() {
     const getJWT = useGetJWT()
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [mercureToken, setMercureToken] = useState('');
     const [loggedUser, setLoggedUser] = useContext(userContext);
 
     const handleUsername = (e) => {
@@ -27,7 +28,7 @@ export default function Login() {
         e.preventDefault();
         getJWT(username, password).then(data => {
             if (data && data.message === "Login successful") {
-                setLoggedUser(data.access);
+                setLoggedUser(data);
                 toast.success(data.message);
                 setTimeout(() => {
                     navigate('/userlist', {replace: true});

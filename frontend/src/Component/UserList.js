@@ -22,7 +22,6 @@ export default function UserList() {
 
     useEffect(() => {
         getUserList().then(data => {
-            console.log("API Response:", data); // Log the complete response
     
             // If data itself is the users array
             if (Array.isArray(data)) {
@@ -38,12 +37,16 @@ export default function UserList() {
             console.error("Error fetching user list:", error);
         });
     
-        const token = loggedUser;
-        const url = new URL('http://localhost:8001/.well-known/mercure');
-        url.searchParams.append('topic', 'https://example.com/my-private-topic');
-        url.searchParams.append('token', token); // Append the token
+        const mercureToken = loggedUser.mercure_token;
+        const mercureHubUrl ='http://localhost:8001/.well-known/mercure';
+        const headers = {
+            Authorization: `Bearer ${mercureToken}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+        };
+        
+        const eventSource = new EventSource(mercureHubUrl, { headers });
+        
 
-        const eventSource = new EventSource(url, {withCredentials: true});
         eventSource.onmessage = handleMessage;
 
         return () => {
