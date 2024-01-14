@@ -1,8 +1,8 @@
 from django.utils import timezone
 
 from rest_framework import generics
-from .models import Room, Message
-from .serializers import RoomSerializer, MessageSerializer, UserSerializer
+from .models import PrivateMessage
+from .serializers import PrivateMessageSerializer, UserSerializer
 from rest_framework.permissions import IsAuthenticated
 import requests
 import json
@@ -11,57 +11,60 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.models import User
+import jwt
 
 
-class RoomListCreate(generics.ListCreateAPIView):
-    permission_classes = IsAuthenticated
-    serializer_class = RoomSerializer
-
-    def get_queryset(self):
-        return Room.objects.all()
-
-    def perform_create(self, serializer):
-        serializer.save()
-
-
-class MessageListCreate(generics.ListCreateAPIView):
+class PrivateMessageListCreate(generics.ListCreateAPIView):
     permission_classes = (IsAuthenticated,)
-    serializer_class = MessageSerializer
+    serializer_class = PrivateMessageSerializer
 
     def get_queryset(self):
-        room = self.kwargs["room"]
-        return Message.objects.filter(Room=room)
+        receiver_id = self.kwargs.get("receiver")
+        return PrivateMessage.objects.filter(sender=self.request.user, receiver_id=receiver_id) | PrivateMessage.objects.filter(sender_id=receiver_id, receiver=self.request.user)
 
     def perform_create(self, serializer):
-        room = Room.objects.get(id=self.kwargs["room"])
-        user = self.request.user
-        message_instance = serializer.save(user=user, room=room)
+      receiver_id = self.kwargs.get("receiver")
+      if receiver_id:
+          receiver = User.objects.get(id=receiver_id)
+          serializer.save(receiver=receiver)
 
-        topic = f'room-{self.kwargs["room"]}'
-        data = {
-            "id": message_instance.id,
-            "message": message_instance.message,
-            "user": message_instance.user.username,
-            "room": message_instance.room.id,
-            "time": message_instance.time.strftime("%Y-%m-%d %H:%M:%S"),
-        }
+          message_instance = serializer.instance
 
-        # Broadcast the message manually using requests library
-        try:
-            response = requests.post(
-                settings.MERCURE_PUBLISH_URL,
-                headers={'Content-Type': 'application/x-www-form-urlencoded'},
-                data={
-                    'topic': topic,
-                    'data': json.dumps(data),
-                },
-            )
-            response.raise_for_status()
-        except requests.RequestException as e:
-            print(f"Error broadcasting message: {e}")
+          user_info = {
+              'user_id': message_instance.sender.id,
+              'receiver_id': receiver.id,
+          }
+          jwt_token = jwt.encode(user_info, settings.MERCURE_JWT, algorithm='HS256')
+
+          topic = f'private-message-user-{message_instance.sender.id}-{receiver.id}'
+          data = {
+              "id": message_instance.id,
+              "message": message_instance.message,
+              "sender": message_instance.sender.username,
+              "receiver": message_instance.receiver.username,
+              "time": message_instance.time.strftime("%Y-%m-%d %H:%M:%S"),
+          }
+
+          try:
+              response = requests.post(
+                  settings.MERCURE_PUBLISH_URL,
+                  headers={
+                      'Content-Type': 'application/x-www-form-urlencoded',
+                      'Authorization': f'Bearer {jwt_token}',
+                  },
+                  data={
+                      'topic': topic,
+                      'data': json.dumps(data),
+                  },
+              )
+              response.raise_for_status()
+          except requests.RequestException as e:
+              print(f"Error broadcasting message: {e}")
+
+          return Response({"status": "Message sent"})
 
 class CreateUserView(APIView):
     permission_classes = [AllowAny]
@@ -87,17 +90,19 @@ class CustomLoginView(APIView):
         user = authenticate(request, username=username, password=password)
         if user:
           refresh = RefreshToken.for_user(user)
+          jwt_token = jwt.encode({'user_id': user.id}, settings.MERCURE_JWT, algorithm='HS256')
           access_token = str(refresh.access_token)
           return Response(
-              {
-                  "id": user.id,
-                  "username": user.username,
-                  "message": "Login successful",
-                  "access": access_token,
-                  "refresh": str(refresh),
-              },
-              status=status.HTTP_200_OK,
-          )
+                {
+                    "id": user.id,
+                    "username": user.username,
+                    "message": "Login successful",
+                    "access": access_token,
+                    "refresh": str(refresh),
+                    "mercure_token": jwt_token,
+                },
+                status=status.HTTP_200_OK,
+            )
         return Response(
             {"detail": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED
         )
