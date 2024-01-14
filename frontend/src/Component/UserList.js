@@ -46,7 +46,6 @@ export default function UserList() {
         
         const eventSource = new EventSource(mercureHubUrl, { headers });
         
-
         eventSource.onmessage = handleMessage;
 
         return () => {
