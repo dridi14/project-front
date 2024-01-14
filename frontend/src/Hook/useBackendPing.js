@@ -1,6 +1,6 @@
 export default function useBackendPing() {
     return function (userId) {
-        return fetch(`http://localhost:8245/ping/${userId}`, {
+        return fetch(`http://127.0.0.1:8000/ping/${userId}`, {
             method: 'POST',
         })
             .then(data => data.json())

@@ -1,18 +1,27 @@
-import data from "bootstrap/js/src/dom/data";
+import "bootstrap/js/src/dom/data";
 
 export default function useGetJWT() {
-
     return function (username, password) {
-        const credentials = btoa(`${username}:${password}`);
+        // Create the body as a JSON object
+        const body = JSON.stringify({
+            username: username,
+            password: password
+        });
 
-        return fetch('http://localhost:8000/api/acounts/login/', {
-            method: 'GET',
-            credentials: "include",
-            mode: "cors",
+        return fetch('http://127.0.0.1:8000/api/accounts/login/', {
+            method: 'POST',
             headers: {
-                'Authorization': `Basic ${credentials}`
-            }
+                'Content-Type': 'application/json'
+            },
+            mode: "cors",
+            credentials: 'include',
+            body: body
         })
-            .then(data => data.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        });
     }
 }
