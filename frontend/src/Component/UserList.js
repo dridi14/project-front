@@ -37,9 +37,8 @@ export default function UserList() {
             console.error("Error fetching user list:", error);
         });
         document.cookie = `mercureAuthorization=${loggedUser.mercure_token};Secure;SameSite=None`;
-        const mercureToken = loggedUser.mercure_token;
         const mercureHubUrl ='http://localhost:1234/.well-known/mercure';
-        const topic = 'test';
+        const topic = `users/` + loggedUser.id;
         const url = new URL(mercureHubUrl);
         url.searchParams.append('topic', topic);
         const eventSource = new EventSource(url, {withCredentials: true});

@@ -96,7 +96,8 @@ class CustomLoginView(APIView):
         user = authenticate(request, username=username, password=password)
         if user:
           refresh = RefreshToken.for_user(user)
-          jwt_token = jwt.encode({'user_id': user.id}, settings.MERCURE_JWT, algorithm='HS256')
+          mercure_payload = {'mercure': {'subscribe': [f"user/{user.id}"]}}
+          jwt_token = jwt.encode(mercure_payload, settings.MERCURE_JWT, algorithm='HS256')
           access_token = str(refresh.access_token)
           return Response(
                 {
@@ -122,21 +123,16 @@ class PingUserView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, user_id):
-        try:
-            user = User.objects.get(id=user_id)
-        except User.DoesNotExist:
-            return JsonResponse({'error': 'User not found'}, status=404)
-
         # Create Mercure JWT Token
         jwt_token = jwt.encode(
-            {'mercure': {'publish': [f"{user.username}/ping"]}},
+            {'mercure': {'publish': [f"user/{user_id}"]}},
             settings.MERCURE_JWT_SECRET,
             algorithm='HS256'
         )
 
         # Define the data to be sent
         data = {
-            'topic': f"{user.username}/ping",
+            'topic': f"user/{user_id}",
             'data': 'Ping!',
         }
 

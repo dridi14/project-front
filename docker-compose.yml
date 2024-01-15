@@ -10,14 +10,14 @@ services:
     volumes:
       - ./backend:/app
 
-  # frontend:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile.frontend
-  #   ports:
-  #     - "3000:3000"
-  #   volumes:
-  #     - ./frontend:/app
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
 
   mercure:
     image: dunglas/mercure
@@ -27,7 +27,6 @@ services:
       MERCURE_PUBLISHER_JWT_KEY: '20dcbb37a16c84572ffce125538c15094e936c1c169617882b7568027072ddb7'
       MERCURE_SUBSCRIBER_JWT_KEY: '20dcbb37a16c84572ffce125538c15094e936c1c169617882b7568027072ddb7'
       MERCURE_EXTRA_DIRECTIVES: |
-        anonymous
         cors_origins "http://localhost:3000"
         subscribe_authorization_method jwt
     command: /usr/bin/caddy run --config /etc/caddy/Caddyfile
