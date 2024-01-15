@@ -38,7 +38,7 @@ export default function UserList() {
         });
         document.cookie = `mercureAuthorization=${loggedUser.mercure_token};Secure;SameSite=None`;
         const mercureHubUrl ='http://localhost:1234/.well-known/mercure';
-        const topic = `users/` + loggedUser.id;
+        const topic = `user/` + loggedUser.id;
         const url = new URL(mercureHubUrl);
         url.searchParams.append('topic', topic);
         const eventSource = new EventSource(url, {withCredentials: true});
