@@ -40,7 +40,7 @@ class PrivateMessageListCreate(generics.ListCreateAPIView):
           jwt_token = jwt.encode(
               {
                   'mercure': {
-                      'publish': ["*"]
+                      'publish': ["receiver/{}".format(receiver_id)]
                   }
               },
               settings.MERCURE_JWT,
@@ -50,7 +50,7 @@ class PrivateMessageListCreate(generics.ListCreateAPIView):
                 'Authorization': 'Bearer {}'.format(jwt_token),
                 'Content-Type': 'application/x-www-form-urlencoded',
           }
-          topic = f'test'
+          topic = f'receiver/{receiver_id}'
           data = {
               "id": message_instance.id,
               "message": message_instance.message,
@@ -68,7 +68,7 @@ class PrivateMessageListCreate(generics.ListCreateAPIView):
               )
               response.raise_for_status()
           except requests.RequestException as e:
-              print(f"Error broadcasting message: {e}")
+              return Response(f"Error broadcasting message: {e}")
 
           return Response({"status": "Message sent"})
 
