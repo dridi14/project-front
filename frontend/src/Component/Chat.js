@@ -6,14 +6,22 @@ import Col from 'react-bootstrap/Col';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import ListGroup from 'react-bootstrap/ListGroup';
-import './Chat.css'; // Import your CSS file for styling
-import io from 'socket.io-client'; // Import the WebSocket library
+import './Chat.css';
+import io from 'socket.io-client'; 
+import { useLocation } from 'react-router-dom';
+import { useContext } from 'react';
+import { userContext } from '../Context/UserContext';
 
 
 
 function Chat() {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const userId = queryParams.get('userId');
+  const [loggedUser] = useContext(userContext);
+    const [userList, setUserList] = useState([]);
 
   useEffect(() => {
     // Fetch initial messages from the server
@@ -38,12 +46,34 @@ function Chat() {
   const fetchMessages = async () => {
     // Fetch messages from the server and set them in the state
     try {
-      const response = await axios.get('http://localhost:8000/receive');
+      const response = await axios.get('http://127.0.0.1:8000/private-messages/<int:receiver>/');
       setMessages(response.data);
     } catch (error) {
       console.error('Failed to fetch messages:', error);
     }
   };
+
+    document.cookie = `mercureAuthorization=${loggedUser.mercure_token};Secure;SameSite=None`;
+    const mercureHubUrl ='http://localhost:1234/.well-known/mercure';
+
+    // Topic formatted as 'receiver/{userid}'
+    const topic = `receiver/${loggedUser.id}`;
+    const url = new URL(mercureHubUrl);
+    url.searchParams.append('topic', topic);
+
+    const eventSource = new EventSource(url, {withCredentials: true});
+
+    eventSource.onmessage = e => {
+        const newMessage = JSON.parse(e.data);
+        // Assuming newMessage is structured correctly, add it to your state
+        setMessages(prevMessages => [...prevMessages, newMessage]);
+    };
+
+    // Cleanup the EventSource connection when the component unmounts
+    return () => {
+        eventSource.close();
+    };
+
 
   const handleSendMessage = async () => {
     // Send a new message to the server and update messages state
