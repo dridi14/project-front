@@ -17,7 +17,7 @@ export default function UserList() {
     }
 
     const handleMessage = (e) => {
-        console.log(e);
+        console.log(e, "message received");
     }
 
     useEffect(() => {
@@ -36,18 +36,15 @@ export default function UserList() {
         }).catch(error => {
             console.error("Error fetching user list:", error);
         });
-    
+        document.cookie = `mercureAuthorization=${loggedUser.mercure_token};Secure;SameSite=None`;
         const mercureToken = loggedUser.mercure_token;
         const mercureHubUrl ='http://localhost:1234/.well-known/mercure';
-        const topic = '';
-        const headers = {
-            'Authorization': `Bearer ${mercureToken}`,
-            'Content-Type': 'application/x-www-form-urlencoded',
-        };
-        
-        const eventSource = new EventSource(`${mercureHubUrl}?topic=${encodeURIComponent(topic)}`, { headers: {Authorization: `Bearer ${mercureToken}` }});
+        const topic = 'test';
+        const url = new URL(mercureHubUrl);
+        url.searchParams.append('topic', topic);
+        const eventSource = new EventSource(url, {withCredentials: true});
                 
-        eventSource.onmessage = handleMessage;
+        eventSource.onmessage = e => console.log(e);
 
         return () => {
             eventSource.close();

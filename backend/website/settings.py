@@ -103,7 +103,6 @@ DATABASE_URL = config("DATABASE_URL")
 DATABASES = {"default": dj_database_url.config(default=DATABASE_URL)}
 
 
-MERCURE_HUB_URL = "http://localhost:9090/.well-known/mercure"
 MERCURE_JWT = "20dcbb37a16c84572ffce125538c15094e936c1c169617882b7568027072ddb7"
 
 # Password validation

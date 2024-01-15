@@ -15,12 +15,14 @@ from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.models import User
 import jwt
+from django.http import HttpResponse
+
 
 
 class PrivateMessageListCreate(generics.ListCreateAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = PrivateMessageSerializer
-
+ 
     def get_queryset(self):
         receiver_id = self.kwargs.get("receiver")
         return PrivateMessage.objects.filter(sender=self.request.user, receiver_id=receiver_id) | PrivateMessage.objects.filter(sender_id=receiver_id, receiver=self.request.user)
@@ -33,32 +35,34 @@ class PrivateMessageListCreate(generics.ListCreateAPIView):
 
           message_instance = serializer.instance
 
-          user_info = {
-              'user_id': message_instance.sender.id,
-              'receiver_id': receiver.id,
+          jwt_token = jwt.encode(
+              {
+                  'mercure': {
+                      'publish': ["*"]
+                  }
+              },
+              settings.MERCURE_JWT,
+              algorithm='HS256'
+            )
+          headers = {
+                'Authorization': 'Bearer {}'.format(jwt_token),
+                'Content-Type': 'application/x-www-form-urlencoded',
           }
-          jwt_token = jwt.encode(user_info, settings.MERCURE_JWT, algorithm='HS256')
-
-          topic = f'private-message-user-{message_instance.sender.id}-{receiver.id}'
+          topic = f'test'
           data = {
               "id": message_instance.id,
               "message": message_instance.message,
               "sender": message_instance.sender.username,
               "receiver": message_instance.receiver.username,
               "time": message_instance.time.strftime("%Y-%m-%d %H:%M:%S"),
+              'topic': topic,
           }
 
           try:
               response = requests.post(
                   settings.MERCURE_PUBLISH_URL,
-                  headers={
-                      'Content-Type': 'application/x-www-form-urlencoded',
-                      'Authorization': f'Bearer {jwt_token}',
-                  },
-                  data={
-                      'topic': topic,
-                      'data': json.dumps(data),
-                  },
+                  data=data,
+                  headers=headers,
               )
               response.raise_for_status()
           except requests.RequestException as e:
