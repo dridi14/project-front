@@ -16,6 +16,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.models import User
 import jwt
 from django.http import HttpResponse
+from django.http import JsonResponse
+from website import settings
 
 
 
@@ -115,4 +117,44 @@ class UserList(generics.ListAPIView):
     permission_classes = (IsAuthenticated,)
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    
+
+class PingUserView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, user_id):
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return JsonResponse({'error': 'User not found'}, status=404)
+
+        # Create Mercure JWT Token
+        jwt_token = jwt.encode(
+            {'mercure': {'publish': [f"{user.username}/ping"]}},
+            settings.MERCURE_JWT_SECRET,
+            algorithm='HS256'
+        )
+
+        # Define the data to be sent
+        data = {
+            'topic': f"{user.username}/ping",
+            'data': 'Ping!',
+        }
+
+        # Set the headers for the Mercure Publish request
+        headers = {
+            'Authorization': f'Bearer {jwt_token}',
+            'Content-Type': 'application/x-www-form-urlencoded',
+        }
+
+        # Send the request to the Mercure Hub
+        try:
+            response = requests.post(
+                settings.MERCURE_PUBLISH_URL,
+                data=data,
+                headers=headers
+            )
+            response.raise_for_status()
+        except requests.RequestException as e:
+            return JsonResponse({'error': str(e)}, status=500)
+
+        return JsonResponse({'message': 'Ping sent successfully'}, status=200)

@@ -104,6 +104,7 @@ DATABASES = {"default": dj_database_url.config(default=DATABASE_URL)}
 
 
 MERCURE_JWT = "20dcbb37a16c84572ffce125538c15094e936c1c169617882b7568027072ddb7"
+MERCURE_JWT_SECRET  = "20dcbb37a16c84572ffce125538c15094e936c1c169617882b7568027072ddb7"
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
