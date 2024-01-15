@@ -26,15 +26,17 @@ services:
       SERVER_NAME: ":80"
       MERCURE_PUBLISHER_JWT_KEY: '20dcbb37a16c84572ffce125538c15094e936c1c169617882b7568027072ddb7'
       MERCURE_SUBSCRIBER_JWT_KEY: '20dcbb37a16c84572ffce125538c15094e936c1c169617882b7568027072ddb7'
-      EXTRA_DIRECTIVES: |
-        cors_allowed_origins "cors_origins http://localhost:3000"
+      MERCURE_EXTRA_DIRECTIVES: |
+        cors_origins "*"
         subscribe_authorization_method jwt
+        anonymous
     command: /usr/bin/caddy run --config /etc/caddy/Caddyfile
     volumes:
       - mercure_data:/data
       - mercure_config:/config
 
     ports:
+      - "1234:80"
       - "8001:80"
     networks:
       - dev

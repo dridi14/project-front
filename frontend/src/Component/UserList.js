@@ -17,7 +17,7 @@ export default function UserList() {
     }
 
     const handleMessage = (e) => {
-        // Your handleMessage logic
+        console.log(e);
     }
 
     useEffect(() => {
@@ -38,16 +38,15 @@ export default function UserList() {
         });
     
         const mercureToken = loggedUser.mercure_token;
-        const mercureHubUrl ='http://localhost:8001/.well-known/mercure';
+        const mercureHubUrl ='http://localhost:1234/.well-known/mercure';
         const topic = '';
         const headers = {
             'Authorization': `Bearer ${mercureToken}`,
             'Content-Type': 'application/x-www-form-urlencoded',
-            'origin': 'http://localhost:3000'
         };
         
-        const eventSource = new EventSource(`${mercureHubUrl}?topic=${encodeURIComponent(topic)}`, { headers });
-        
+        const eventSource = new EventSource(`${mercureHubUrl}?topic=${encodeURIComponent(topic)}`, { headers: {Authorization: `Bearer ${mercureToken}` }});
+                
         eventSource.onmessage = handleMessage;
 
         return () => {
