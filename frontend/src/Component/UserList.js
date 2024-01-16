@@ -19,6 +19,7 @@ export default function UserList() {
     const handleSubmit = (e) => {
         e.preventDefault();
         const userId = e.target[0].value;
+        console.log(userId);
         backendPing(userId).then(data => console.log(data))
     }
 
@@ -77,7 +78,7 @@ export default function UserList() {
                     <div className='w-75 mx-auto mb-3 d-flex align-items-center' key={user.id}>
                          <button className='btn btn-dark' style={buttonStyle} type='submit' value={user.id}>{user.username}</button>
                         <form onSubmit={handleSubmit} className='me-2'>
-                          <button className='btn btn-dark mx-4' style={buttonStyleping}>Ping</button>
+                          <button className='btn btn-dark mx-4' style={buttonStyleping} value={user.id}>Ping</button>
                         </form>
                         <button className='btn btn-info' style={buttonStyle} onClick={() => handleChatStart(user.id)}>
                             <FontAwesomeIcon icon={faComment} /> Start Chat

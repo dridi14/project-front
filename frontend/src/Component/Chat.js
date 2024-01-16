@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect, useContext } from 'react';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
@@ -9,10 +8,8 @@ import ListGroup from 'react-bootstrap/ListGroup';
 import './Chat.css';
 import io from 'socket.io-client'; 
 import { useLocation } from 'react-router-dom';
-import { useContext } from 'react';
 import { userContext } from '../Context/UserContext';
-
-
+import axios from 'axios';
 
 function Chat() {
   const [messages, setMessages] = useState([]);
@@ -21,38 +18,46 @@ function Chat() {
   const queryParams = new URLSearchParams(location.search);
   const userId = queryParams.get('userId');
   const [loggedUser] = useContext(userContext);
-    const [userList, setUserList] = useState([]);
 
   useEffect(() => {
     // Fetch initial messages from the server
     fetchMessages();
 
-    // Create a WebSocket connection to the Mercure hub
-    const socket = io('YOUR_MERCURE_HUB_URL');
+    const socket = io();
 
-    // Listen for updates from Mercure
-    socket.on('YOUR_MERCURE_TOPIC', (message) => {
-      // Handle incoming messages, e.g., add them to the state
-      setMessages([...messages, message]);
+    // Listen for updates from socket
+    socket.on('YOUR_SOCKET_TOPIC', (message) => {
+      setMessages(prevMessages => [...prevMessages, message]);
     });
 
-    // Cleanup the WebSocket connection when the component unmounts
     return () => {
       socket.disconnect();
     };
-  }, [messages]);
-
+  }, []); // Removed messages from dependency array
 
   const fetchMessages = async () => {
-    // Fetch messages from the server and set them in the state
     try {
-      const response = await axios.get('http://127.0.0.1:8000/private-messages/<int:receiver>/');
-      setMessages(response.data);
+      const url = `http://127.0.0.1:8000/api/private-messages/${userId}/`;
+      const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${loggedUser.access}`
+          },
+          mode: "cors",
+          credentials: 'include',
+      });
+
+      if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setMessages(data);
     } catch (error) {
       console.error('Failed to fetch messages:', error);
     }
-  };
-
+    console.log(loggedUser.mercure_token)
     document.cookie = `mercureAuthorization=${loggedUser.mercure_token};Secure;SameSite=None`;
     const mercureHubUrl ='http://localhost:1234/.well-known/mercure';
 
@@ -62,8 +67,10 @@ function Chat() {
     url.searchParams.append('topic', topic);
 
     const eventSource = new EventSource(url, {withCredentials: true});
+    console.log('subscribed', topic)
 
     eventSource.onmessage = e => {
+        console.log(e)
         const newMessage = JSON.parse(e.data);
         // Assuming newMessage is structured correctly, add it to your state
         setMessages(prevMessages => [...prevMessages, newMessage]);
@@ -73,19 +80,38 @@ function Chat() {
     return () => {
         eventSource.close();
     };
-
+  };
+  
 
   const handleSendMessage = async () => {
-    // Send a new message to the server and update messages state
     try {
-      const response = await axios.post('http://localhost:8000/send', {
-        content: newMessage,
+      const url = `http://127.0.0.1:8000/api/private-messages/${userId}/`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${loggedUser.access}`
+        },
+        body: JSON.stringify({ message: newMessage }),
+        mode: "cors",
+        credentials: 'include',
       });
-      setMessages([...messages, response.data]);
+  
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+  
+      const responseData = await response.json();
+  console.log("Sent Message:", responseData); // Log sent message
+  setMessages(prevMessages => [...prevMessages, responseData]);
       setNewMessage('');
     } catch (error) {
       console.error('Failed to send message:', error);
     }
+  };
+
+  const isMessageSentByUser = (message) => {
+    return message.sender === loggedUser.id; // Replace 'loggedUser.id' with the current user's id
   };
 
   return (
@@ -95,11 +121,13 @@ function Chat() {
           <h1>Chat</h1>
           <div className="message-container">
             <ListGroup>
-              {messages.map((message) => (
-                <ListGroup.Item key={message.id}>
-                  {message.content}
-                </ListGroup.Item>
-              ))}
+            {messages.map((message) => (
+  <ListGroup.Item 
+    key={message.id} 
+    className={`message-item ${isMessageSentByUser(message) ? 'sent' : 'received'}`}>
+    {message.message}
+  </ListGroup.Item>
+))}
             </ListGroup>
           </div>
           <Form className="mt-3">

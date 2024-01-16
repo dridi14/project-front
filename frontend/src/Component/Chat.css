@@ -4,6 +4,7 @@
     padding: 10px;
     max-height: 400px; /* Set a maximum height for the message container */
     overflow-y: auto; /* Enable vertical scrolling when content overflows */
+    color: #000; ;
   }
   
   /* Style the message list */
@@ -29,3 +30,17 @@
     border-radius: 0; /* Remove button border radius */
   }
   
+  /* Style for sent messages */
+.message-container .list-group-item.sent {
+  background-color: #d1e7dd; /* Light green background for sent messages */
+  text-align: right; /* Align sent messages to the right */
+  border-radius: 10px 10px 0 10px; /* Rounded corners for sent messages */
+}
+
+/* Style for received messages */
+.message-container .list-group-item.received {
+  background-color: #f8d7da; /* Light red background for received messages */
+  text-align: left; /* Align received messages to the left */
+  border-radius: 10px 10px 10px 0; /* Rounded corners for received messages */
+  width: 30%;
+}
