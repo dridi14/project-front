@@ -37,50 +37,55 @@ function Chat() {
 
   const fetchMessages = async () => {
     try {
-      const url = `http://127.0.0.1:8000/api/private-messages/${userId}/`;
-      const response = await fetch(url, {
-          method: 'GET',
-          headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${loggedUser.access}`
-          },
-          mode: "cors",
-          credentials: 'include',
-      });
+        const url = `http://127.0.0.1:8000/api/private-messages/${userId}/`;
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${loggedUser.access}`
+            },
+            mode: "cors",
+            credentials: 'include',
+        });
 
-      if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-      }
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
 
-      const data = await response.json();
-      setMessages(data);
+        const data = await response.json();
+        setMessages(data);
     } catch (error) {
-      console.error('Failed to fetch messages:', error);
+        console.error('Failed to fetch messages:', error);
     }
     console.log(loggedUser.mercure_token)
     document.cookie = `mercureAuthorization=${loggedUser.mercure_token};Secure;SameSite=None`;
-    const mercureHubUrl ='http://localhost:1234/.well-known/mercure';
+    const mercureHubUrl = 'http://localhost:1234/.well-known/mercure';
 
-    // Topic formatted as 'receiver/{userid}'
     const topic = `receiver/${loggedUser.id}`;
     const url = new URL(mercureHubUrl);
     url.searchParams.append('topic', topic);
 
-    const eventSource = new EventSource(url, {withCredentials: true});
+    const eventSource = new EventSource(url, { withCredentials: true });
     console.log('subscribed', topic)
 
     eventSource.onmessage = e => {
         console.log(e)
-        const newMessage = JSON.parse(e.data);
-        // Assuming newMessage is structured correctly, add it to your state
-        setMessages(prevMessages => [...prevMessages, newMessage]);
+        try {
+            const newMessage = JSON.parse(e.data); // Attempt to parse as JSON
+            // Assuming newMessage is structured correctly, add it to your state
+            setMessages(prevMessages => [...prevMessages, newMessage]);
+        } catch (jsonParseError) {
+            console.error('Data received is not valid JSON:', jsonParseError);
+            // Handle non-JSON data here, if needed
+        }
     };
 
     // Cleanup the EventSource connection when the component unmounts
     return () => {
         eventSource.close();
     };
-  };
+};
+
   
 
   const handleSendMessage = async () => {
