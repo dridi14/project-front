@@ -2,6 +2,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import NeedAuth from './Auth/NeedAuth';
 import UserList from './Component/UserList';
+import GroupCreation from './Component/group';
 import Login from './Auth/Login';
 import Chat from './Component/Chat'; // Import the Chat component
 import UserProvider, { userContext } from './Context/UserContext';
@@ -28,6 +29,7 @@ function App() {
             <Nav className="mr-auto">
               <Nav.Link as={Link} to="/chat">Chat</Nav.Link>
               <Nav.Link as={Link} to="/userlist">User List</Nav.Link>
+              <Nav.Link as={Link} to="/group">Group</Nav.Link>
               
                 <Nav.Link as={Link} to="/login" onClick={handleLogout}>Logout</Nav.Link> 
             </Nav>
@@ -39,6 +41,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/chat" element={<NeedAuth><Chat /></NeedAuth>} />
           <Route path="/userlist" element={<NeedAuth><UserList /></NeedAuth>} />
+          <Route path="/group" element={<NeedAuth><GroupCreation /></NeedAuth>} />
           <Route path="*" element={<h1>Not Found</h1>} />
         </Routes>
       </BrowserRouter>
