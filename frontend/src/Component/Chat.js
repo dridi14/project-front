@@ -26,12 +26,13 @@ function Chat() {
     const socket = io();
 
     // Listen for updates from socket
-    socket.on('YOUR_SOCKET_TOPIC', (message) => {
+    socket.on(`user/${loggedUser.id}`, (message) => {
+      console.log('Received message:', message);
       setMessages(prevMessages => [...prevMessages, message]);
     });
 
     return () => {
-      socket.disconnect();
+      socket.connect();
     };
   }, []); // Removed messages from dependency array
 
@@ -59,9 +60,9 @@ function Chat() {
     }
     console.log(loggedUser.mercure_token)
     document.cookie = `mercureAuthorization=${loggedUser.mercure_token};Secure;SameSite=None`;
-    const mercureHubUrl = 'http://localhost:1234/.well-known/mercure';
+    const mercureHubUrl = 'http://localhost:8001/.well-known/mercure';
 
-    const topic = `receiver/${loggedUser.id}`;
+    const topic = `user/${loggedUser.id}`;
     const url = new URL(mercureHubUrl);
     url.searchParams.append('topic', topic);
 
@@ -70,9 +71,10 @@ function Chat() {
 
     eventSource.onmessage = e => {
         console.log(e)
+        // 
         try {
-            const newMessage = JSON.parse(e.data); // Attempt to parse as JSON
-            // Assuming newMessage is structured correctly, add it to your state
+            let newMessage = JSON.parse(e.data); 
+            console.log(newMessage)
             setMessages(prevMessages => [...prevMessages, newMessage]);
         } catch (jsonParseError) {
             console.error('Data received is not valid JSON:', jsonParseError);
@@ -80,9 +82,8 @@ function Chat() {
         }
     };
 
-    // Cleanup the EventSource connection when the component unmounts
     return () => {
-        eventSource.close();
+        eventSource.connect();
     };
 };
 
@@ -140,7 +141,7 @@ function Chat() {
               <Form.Control
                 type="text"
                 placeholder="Type your message..."
-                value={newMessage}
+                value={newMessage.message}
                 onChange={(e) => setNewMessage(e.target.value)}
               />
             </Form.Group>
