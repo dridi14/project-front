@@ -2,7 +2,7 @@ from django.utils import timezone
 
 from rest_framework import generics
 from .models import PrivateMessage
-from .serializers import PrivateMessageSerializer, UserSerializer
+from .serializers import PrivateMessageSerializer, UserSerializer, GroupMessageSerializer, GroupSerializer
 from rest_framework.permissions import IsAuthenticated
 import requests
 import json
@@ -13,7 +13,7 @@ from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 import jwt
 from django.http import HttpResponse
 from django.http import JsonResponse
@@ -21,11 +21,11 @@ from website import settings
 from urllib.parse import urlencode
 from datetime import datetime, timedelta
 
-def generate_jwt_for_publishing(topics):
+def generate_jwt_for_publishing(topics=None, receives=None):
     payload = {
         'mercure': {
-            'publish': ['*'],  
-            'subscribe': ["*"]
+            'publish': [topic for topic in topics] if topics else ['*'],
+            'subscribe': [f"user/{user_id}" for user_id in receives] if receives else ['*'],
         },
         'exp': datetime.utcnow() + timedelta(minutes=60) 
     }
@@ -156,3 +156,53 @@ class PingUserView(APIView):
             print("Failed to publish message:", response.text)
             return JsonResponse({'error': response.text}, status=500)
         return JsonResponse({"status": "Message sent"})
+
+
+class GroupView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = GroupSerializer(data=request.data)
+        if serializer.is_valid():
+            group = serializer.save()
+            return Response(
+                {"message": "Group created successfully"},
+                status=status.HTTP_201_CREATED,
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def get(self, request):
+        groups = request.user.groups.all()
+        serializer = GroupSerializer(groups, many=True)
+        return Response(serializer.data)
+    
+
+class GroupMessageListCreate(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, group_id):
+        group = Group.objects.get(id=group_id)
+        messages = group.groupmessage_set.all()
+        serializer = GroupMessageSerializer(messages, many=True)
+        return Response(serializer.data)
+    
+    def post(self, request, group_id):
+        group = Group.objects.get(id=group_id)
+        serializer = GroupMessageSerializer(data=request.data)
+        if serializer.is_valid():
+            group_message = serializer.save(sender=request.user, group=group)
+            data = {
+                "message": group_message.message,
+                "sender": group_message.sender.username,
+                "group": group_message.group.name,
+                "time": group_message.time.strftime("%Y-%m-%d %H:%M:%S"),
+            }
+            response = publish_to_mercure(f"group/{group_id}", data)
+            if response.status_code != 200:
+                print("Failed to publish message:", response.text)
+                return JsonResponse({'error': response.text}, status=500)
+            return Response(
+                {"message": "Group message sent"},
+                status=status.HTTP_201_CREATED,
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
