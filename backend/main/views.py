@@ -176,6 +176,22 @@ class GroupView(APIView):
         serializer = GroupSerializer(groups, many=True)
         return Response(serializer.data)
     
+    def delete(self, request, group_id):
+        group = Group.objects.get(id=group_id)
+        group.delete()
+        return Response({"message": "Group deleted"})
+    
+    def put(self, request, group_id):
+        group = Group.objects.get(id=group_id)
+        serializer = GroupSerializer(group, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {"message": "Group updated successfully"},
+                status=status.HTTP_200_OK,
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
 
 class GroupMessageListCreate(APIView):
     permission_classes = [IsAuthenticated]
