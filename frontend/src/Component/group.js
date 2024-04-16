@@ -39,9 +39,8 @@ function GroupCreation() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            // The headers should be set in the axios configuration object, which is the third parameter
             const response = await axios.post('http://127.0.0.1:8000/api/groups/', {
-                name: groupName,   // Data payload should only include data relevant to the POST request
+                name: groupName,  
                 members: members
             }, {
                 headers: {
