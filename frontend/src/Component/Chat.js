@@ -89,7 +89,8 @@ function Chat() {
 
   
 
-  const handleSendMessage = async () => {
+  const handleSendMessage = async (e) => {
+    e.preventDefault(); 
     try {
       const url = `http://127.0.0.1:8000/api/private-messages/${userId}/`;
       const response = await fetch(url, {
@@ -120,39 +121,40 @@ function Chat() {
     return message.sender === loggedUser.id; // Replace 'loggedUser.id' with the current user's id
   };
 
-  return (
-    <Container>
-      <Row>
-        <Col md={8} className="mx-auto">
-          <h1>Chat</h1>
-          <div className="message-container">
-            <ListGroup>
-            {messages.map((message) => (
-  <ListGroup.Item 
-    key={message.id} 
-    className={`message-item ${isMessageSentByUser(message) ? 'sent' : 'received'}`}>
-    {message.message}
-  </ListGroup.Item>
-))}
-            </ListGroup>
-          </div>
-          <Form className="mt-3">
-            <Form.Group>
-              <Form.Control
-                type="text"
-                placeholder="Type your message..."
-                value={newMessage.message}
-                onChange={(e) => setNewMessage(e.target.value)}
-              />
-            </Form.Group>
-            <Button variant="primary" onClick={handleSendMessage}>
-              Send
-            </Button>
-          </Form>
-        </Col>
-      </Row>
-    </Container>
-  );
+  // Update your Form to include onSubmit
+return (
+  <Container>
+    <Row>
+      <Col md={8} className="mx-auto">
+        <h1>Chat</h1>
+        <div className="message-container">
+          <ListGroup>
+          {messages.map((message) => (
+    <ListGroup.Item 
+      key={message.id} 
+      className={`message-item ${isMessageSentByUser(message) ? 'sent' : 'received'}`}>
+      {message.message}
+    </ListGroup.Item>
+  ))}
+          </ListGroup>
+        </div>
+        <Form className="mt-3" onSubmit={handleSendMessage}>
+          <Form.Group>
+            <Form.Control
+              type="text"
+              placeholder="Type your message..."
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+            />
+          </Form.Group>
+          <Button variant="primary" type="submit">
+            Send
+          </Button>
+        </Form>
+      </Col>
+    </Row>
+  </Container>
+);
 }
 
 export default Chat;
