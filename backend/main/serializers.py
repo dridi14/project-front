@@ -33,16 +33,12 @@ class GroupMessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = GroupMessage
         fields = ("id", "message", "sender", "group", "time")
-        read_only_fields = ("sender",)
     def create(self, validated_data):
-        validated_data['sender'] = self.context['request'].user
         return super().create(validated_data)
     
 class GroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = Group
         fields = ("id", "name", "members", "admin")
-        read_only_fields = ("admin",)
     def create(self, validated_data):
-        validated_data['admin'] = self.context['request'].user
         return super().create(validated_data)

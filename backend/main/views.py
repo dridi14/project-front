@@ -162,6 +162,7 @@ class GroupView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        request.data['admin'] = request.user.id
         serializer = GroupSerializer(data=request.data)
         if serializer.is_valid():
             group = serializer.save()
@@ -199,6 +200,10 @@ class GroupMessageListCreate(APIView):
     def get(self, request, group_id):
         group = Group.objects.get(id=group_id)
         messages = group.groupmessage_set.all()
+        for message in messages:
+            message.sender = message.sender.username
+            message.group = message.group.name
+            message.time = message.time.strftime("%Y-%m-%d %H:%M:%S")
         serializer = GroupMessageSerializer(messages, many=True)
         return Response(serializer.data)
     
