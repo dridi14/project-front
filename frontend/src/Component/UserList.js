@@ -54,6 +54,32 @@ export default function UserList() {
         }
     }, []);
 
+    useEffect(async () => {
+        try {
+            const response = await axios.post('http://127.0.0.1:8000/api/groups/', {
+                name: groupName,  
+                members: members
+            }, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${loggedUser.access}`
+                }
+            });
+    
+            if (response.status === 200) {
+                setSuccess(true);
+                setGroupName('');
+                setMembers([]);
+            } else {
+                throw new Error('Failed to create group');
+            }
+        } catch (error) {
+            setError('Error creating group: ' + error.message);
+            setSuccess(false);
+        }
+    }
+    );
+
     // Define your inline styles
     const buttonStyle = {
         width: '150px', // Set your desired width

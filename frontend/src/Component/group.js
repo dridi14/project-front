@@ -36,6 +36,7 @@ function GroupCreation() {
             setMembers([...members, selectedMember]);
         }
     };
+    
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
