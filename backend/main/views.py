@@ -1,7 +1,7 @@
 from django.utils import timezone
 
 from rest_framework import generics
-from .models import PrivateMessage
+from .models import PrivateMessage, Group, GroupMessage
 from .serializers import PrivateMessageSerializer, UserSerializer, GroupMessageSerializer, GroupSerializer
 from rest_framework.permissions import IsAuthenticated
 import requests
@@ -13,7 +13,7 @@ from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User
 import jwt
 from django.http import HttpResponse
 from django.http import JsonResponse
@@ -106,8 +106,8 @@ class CustomLoginView(APIView):
           payload = {
               'mercure': {
                   'publish': ['*'],
+                  'subscribe': ['*'],
               },
-              'exp': datetime.utcnow() + timedelta(minutes=60) 
           }
           publish_to_mercure(f"user/{user.id}", {"message": "User logged in"})
           jwt_token = jwt.encode(payload, settings.MERCURE_JWT_SECRET, algorithm='HS256')
@@ -172,26 +172,67 @@ class GroupView(APIView):
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def get(self, request):
-        groups = request.user.groups.all()
-        serializer = GroupSerializer(groups, many=True)
-        return Response(serializer.data)
-    
+    def get(self, request, group_id=None):
+        if group_id:
+            try:
+                group = Group.objects.get(id=group_id)
+                # Check if the user is an admin or a member of the group
+                if request.user.id == group.admin.id or request.user in group.members.all():
+                    members = [member.username for member in group.members.all()]
+                    serializer = GroupSerializer(group)
+                    group_messages = group.group_messages.all()
+                    data = serializer.data
+                    data["messages"] = GroupMessageSerializer(group_messages, many=True).data
+                    data["members"] = members
+                    return Response(data)
+                else:
+                    return Response(
+                        {"message": "You do not have permission to view this group."},
+                        status=status.HTTP_403_FORBIDDEN,
+                    )
+            except Group.DoesNotExist:
+                return Response(
+                    {"message": "Group not found."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+        else:
+            groups = Group.objects.all()
+            groups_to_return = [
+                group for group in groups
+                if request.user.id == group.admin.id or request.user in group.members.all()
+            ]
+            serializer = GroupSerializer(groups_to_return, many=True)
+            return Response(serializer.data)
+
     def delete(self, request, group_id):
-        group = Group.objects.get(id=group_id)
-        group.delete()
-        return Response({"message": "Group deleted"})
+        try:
+            group = Group.objects.get(id=group_id)
+            # Optional: Check if the user is authorized to delete the group
+            group.delete()
+            return Response({"message": "Group deleted"})
+        except Group.DoesNotExist:
+            return Response(
+                {"message": "Group not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
     
     def put(self, request, group_id):
-        group = Group.objects.get(id=group_id)
-        serializer = GroupSerializer(group, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
+        try:
+            group = Group.objects.get(id=group_id)
+            serializer = GroupSerializer(group, data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(
+                    {"message": "Group updated successfully"},
+                    status=status.HTTP_200_OK,
+                )
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Group.DoesNotExist:
             return Response(
-                {"message": "Group updated successfully"},
-                status=status.HTTP_200_OK,
-            )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                {"message": "Group not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )  
+
     
 
 class GroupMessageListCreate(APIView):

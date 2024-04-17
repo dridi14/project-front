@@ -1,30 +1,36 @@
 import { useEffect, useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+
 import useGetUserList from "../Hook/useGetUserList";
 import useBackendPing from "../Hook/useBackendPing";
 import { userContext } from "../Context/UserContext";
-// If you're using Font Awesome, you might need to import the icons like this
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faComment } from '@fortawesome/free-solid-svg-icons';
-import { useNavigate } from 'react-router-dom';
-
 
 export default function UserList() {
     const [loggedUser] = useContext(userContext);
     const [userList, setUserList] = useState([]);
-    const navigate = useNavigate();
+    const [groupName, setGroupName] = useState('');
+    const [members, setMembers] = useState([]);
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState(false);
 
+    const navigate = useNavigate();
     const getUserList = useGetUserList();
     const backendPing = useBackendPing();
 
     const handleSubmit = (e) => {
         e.preventDefault();
         const userId = e.target[0].value;
-        console.log(userId);
-        backendPing(userId).then(data => console.log(data))
-    }
+        backendPing(userId).then(data => {
+            console.log('Backend response:', data);
+        }).catch(error => {
+            console.error('Failed to ping backend:', error);
+        });
+    };
 
     const handleChatStart = (userId) => {
-        // Navigate to the chat component with the user ID
         navigate(`/chat?userId=${userId}`);
     };
 
@@ -40,45 +46,48 @@ export default function UserList() {
         }).catch(error => {
             console.error("Error fetching user list:", error);
         });
-        document.cookie = `mercureAuthorization=${loggedUser.mercure_token};Secure;SameSite=None`;
-        const mercureHubUrl ='http://localhost:8001/.well-known/mercure';
-        const topic = `user/` + loggedUser.id;
+
+        const mercureHubUrl = 'http://localhost:8001/.well-known/mercure';
+        const topic = `user/${loggedUser.id}`;
         const url = new URL(mercureHubUrl);
         url.searchParams.append('topic', topic);
         const eventSource = new EventSource(url, {withCredentials: true});
                 
-        eventSource.onmessage = e => console.log(e);
+        eventSource.onmessage = e => console.log('Mercure message:', e.data);
 
         return () => {
             eventSource.close();
-        }
-    }, []);
+        };
+    }, [loggedUser.id]);
 
-    useEffect(async () => {
-        try {
-            const response = await axios.post('http://127.0.0.1:8000/api/groups/', {
-                name: groupName,  
-                members: members
-            }, {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${loggedUser.access}`
+    useEffect(() => {
+        const createGroup = async () => {
+            try {
+                const response = await axios.post('http://127.0.0.1:8000/api/groups/', {
+                    name: groupName,  
+                    members: members
+                }, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${loggedUser.access}`
+                    }
+                });
+        
+                if (response.status === 200) {
+                    setSuccess(true);
+                    setGroupName('');
+                    setMembers([]);
+                } else {
+                    throw new Error('Failed to create group');
                 }
-            });
-    
-            if (response.status === 200) {
-                setSuccess(true);
-                setGroupName('');
-                setMembers([]);
-            } else {
-                throw new Error('Failed to create group');
+            } catch (error) {
+                setError('Error creating group: ' + error.message);
+                setSuccess(false);
             }
-        } catch (error) {
-            setError('Error creating group: ' + error.message);
-            setSuccess(false);
-        }
-    }
-    );
+        };
+
+        createGroup();
+    }, []);
 
     // Define your inline styles
     const buttonStyle = {
@@ -88,12 +97,11 @@ export default function UserList() {
         fontSize: '16px' // Adjust font size if needed
     };
 
-    // Define your inline styles
     const buttonStyleping = {
-        width: '75px', // Set your desired width
-        height: '50px', // Set your desired height
-        padding: '0',   // Adjust padding if needed
-        fontSize: '16px' // Adjust font size if needed
+        width: '75px', 
+        height: '50px', 
+        padding: '0',   
+        fontSize: '16px'
     };
 
     return (

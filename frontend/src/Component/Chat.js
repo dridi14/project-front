@@ -20,12 +20,10 @@ function Chat() {
   const [loggedUser] = useContext(userContext);
 
   useEffect(() => {
-    // Fetch initial messages from the server
     fetchMessages();
 
     const socket = io();
 
-    // Listen for updates from socket
     socket.on(`user/${loggedUser.id}`, (message) => {
       console.log('Received message:', message);
       setMessages(prevMessages => [...prevMessages, message]);
@@ -34,7 +32,7 @@ function Chat() {
     return () => {
       socket.connect();
     };
-  }, []); // Removed messages from dependency array
+  }, []); 
 
   const fetchMessages = async () => {
     try {
@@ -71,14 +69,12 @@ function Chat() {
 
     eventSource.onmessage = e => {
         console.log(e)
-        // 
         try {
             let newMessage = JSON.parse(e.data); 
             console.log(newMessage)
             setMessages(prevMessages => [...prevMessages, newMessage]);
         } catch (jsonParseError) {
             console.error('Data received is not valid JSON:', jsonParseError);
-            // Handle non-JSON data here, if needed
         }
     };
 
@@ -109,7 +105,7 @@ function Chat() {
       }
   
       const responseData = await response.json();
-  console.log("Sent Message:", responseData); // Log sent message
+  console.log("Sent Message:", responseData); 
   setMessages(prevMessages => [...prevMessages, responseData]);
       setNewMessage('');
     } catch (error) {
@@ -118,10 +114,9 @@ function Chat() {
   };
 
   const isMessageSentByUser = (message) => {
-    return message.sender === loggedUser.id; // Replace 'loggedUser.id' with the current user's id
+    return message.sender === loggedUser.id; 
   };
 
-  // Update your Form to include onSubmit
 return (
   <Container>
     <Row>

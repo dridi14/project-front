@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import NeedAuth from './Auth/NeedAuth';
 import UserList from './Component/UserList';
 import GroupCreation from './Component/group';
+import GroupList from './Component/groups';
+import GroupChat from './Component/group-chat';
 import Login from './Auth/Login';
 import Chat from './Component/Chat'; // Import the Chat component
 import UserProvider, { userContext } from './Context/UserContext';
@@ -30,7 +32,7 @@ function App() {
               <Nav.Link as={Link} to="/chat">Chat</Nav.Link>
               <Nav.Link as={Link} to="/userlist">User List</Nav.Link>
               <Nav.Link as={Link} to="/group">Group</Nav.Link>
-              
+              <Nav.Link as={Link} to="/groups">Group list</Nav.Link>              
                 <Nav.Link as={Link} to="/login" onClick={handleLogout}>Logout</Nav.Link> 
             </Nav>
           </Navbar.Collapse>
@@ -42,6 +44,8 @@ function App() {
           <Route path="/chat" element={<NeedAuth><Chat /></NeedAuth>} />
           <Route path="/userlist" element={<NeedAuth><UserList /></NeedAuth>} />
           <Route path="/group" element={<NeedAuth><GroupCreation /></NeedAuth>} />
+          <Route path="/groups" element={<NeedAuth><GroupList /></NeedAuth>} />
+          <Route path="/group-chat/:groupId" element={<NeedAuth><GroupChat /></NeedAuth>} />
           <Route path="*" element={<h1>Not Found</h1>} />
         </Routes>
       </BrowserRouter>

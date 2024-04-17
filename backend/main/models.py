@@ -23,7 +23,7 @@ class Group(models.Model):
 class GroupMessage(models.Model):
     message = models.CharField(max_length=100)
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_group_messages')
-    group = models.ForeignKey('Group', on_delete=models.CASCADE)
+    group = models.ForeignKey('Group', on_delete=models.CASCADE, related_name='group_messages')
     time = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

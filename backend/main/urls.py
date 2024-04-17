@@ -15,5 +15,6 @@ urlpatterns = [
     path("accounts/users/", views.UserList.as_view(), name="user_list"),
     path('ping-user/<int:user_id>/', PingUserView.as_view(), name='ping-user'),
     path('groups/', GroupView.as_view(), name='group-list'),
-    path('groups/<int:group_id>/', GroupMessageListCreate.as_view(), name='group-message-list-create'),
+    path('groups/<int:group_id>/', GroupView.as_view(), name='group-detail'),
+    path('group-messages/<int:group_id>/', GroupMessageListCreate.as_view(), name='group-message-list-create'),
 ]
